@@ -148,6 +148,10 @@ export default defineConfig({
       '/dicomweb': {
         target: 'http://localhost:5000',
       },
+      '/api': {
+        target: 'http://localhost:8081',
+        changeOrigin: true
+      },
       // Add conditional proxy based on env vars
       ...(PROXY_TARGET && PROXY_DOMAIN
         ? {
