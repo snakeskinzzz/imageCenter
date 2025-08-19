@@ -24,9 +24,9 @@ window.config = {
       configuration: {
         friendlyName: 'Local Orthanc',
         name: 'Orthanc',
-        wadoUriRoot: 'http://192.168.1.18:8082/pacs',
-        qidoRoot: 'http://192.168.1.18:8082/pacs',
-        wadoRoot: 'http://192.168.1.18:8082/pacs',
+        wadoUriRoot: 'http://127.0.0.1:8082/pacs',
+        qidoRoot: 'http://127.0.0.1:8082/pacs',
+        wadoRoot: 'http://127.0.0.1:8082/pacs',
         qidoSupportsIncludeField: false,
         imageRendering: 'wadors',
         thumbnailRendering: 'wadors',

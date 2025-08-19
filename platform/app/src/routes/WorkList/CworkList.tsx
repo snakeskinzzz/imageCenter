@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useState, useEffect, useMemo } from 'react';
+import React, { createContext, useContext, useState, useEffect, useRef } from 'react';
 import type { DragEndEvent, DragOverEvent, UniqueIdentifier } from '@dnd-kit/core';
 import {
 	closestCenter,
@@ -15,7 +15,8 @@ import {
 	SortableContext,
 	useSortable,
 } from '@dnd-kit/sortable';
-import { Table, Space, Flex, Button, Tabs, message } from 'antd';
+import { Table, Space, Flex, Button, Tabs, message, Input } from 'antd';
+import { SearchOutlined } from '@ant-design/icons';
 import { utils, writeFileXLSX } from "xlsx";
 
 interface DragIndexState {
@@ -63,15 +64,103 @@ const TableHeaderCell = props => {
 	return <th {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />;
 };
 
-const viewDICOM = () => {
-
-}
-
 const BaseTable = (props) => {
-	let baseColumns = []
+	const [data, setData] = useState([])
+	const [filterData, setFilterData] = useState([])
+	const [loading, setLoading] = useState(false);
+	const [messageApi, contextHolder] = message.useMessage();
+
+  const [searchText, setSearchText] = useState('');
+  const [searchedColumn, setSearchedColumn] = useState('');
+  const searchInput = useRef(null);
+  const handleSearch = (selectedKeys, confirm, dataIndex) => {
+    confirm();
+    setSearchText(selectedKeys[0]);
+    setSearchedColumn(dataIndex);
+  };
+  const handleReset = clearFilters => {
+    clearFilters();
+    setSearchText('');
+  };
+
+  const getColumnSearchProps = dataIndex => ({
+    filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters, close }) => (
+      <div style={{ padding: 8 }} onKeyDown={e => e.stopPropagation()}>
+        <Input
+          ref={searchInput}
+          placeholder={`Search ${dataIndex}`}
+          value={selectedKeys[0]}
+          onChange={e => setSelectedKeys(e.target.value ? [e.target.value] : [])}
+          onPressEnter={() => handleSearch(selectedKeys, confirm, dataIndex)}
+          style={{ marginBottom: 8, display: 'block' }}
+        />
+        <Space>
+          <Button
+            type="primary"
+            className='bg-primary'
+            onClick={() => handleSearch(selectedKeys, confirm, dataIndex)}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Search
+          </Button>
+          <Button
+            onClick={() => clearFilters && handleReset(clearFilters)}
+            size="small"
+            style={{ width: 90 }}
+          >
+            Reset
+          </Button>
+          <Button
+            type="link"
+            size="small"
+            onClick={() => {
+              close();
+            }}
+          >
+            close
+          </Button>
+        </Space>
+      </div>
+    ),
+    filterIcon: filtered => <SearchOutlined style={{ color: filtered ? '#1677ff' : undefined }} />,
+    onFilter: (value, record) => record[dataIndex].toString().toLowerCase().includes(value.toLowerCase()),
+    filterDropdownProps: {
+      onOpenChange(open) {
+        if (open) {
+          setTimeout(() => searchInput.current?.select(), 100);
+        }
+      },
+    },
+    render: text => text
+  });
+
+	useEffect(() => {
+		const fetchData = async () => {
+			const response = await fetch(`/api/patients?table=${props.disease}`)
+			const { data } = await response.json()
+			setData(data.map((item, index) => ({
+				...item,
+				key: index.toString() // 添加唯一的key
+			})))
+		}
+		fetchData()
+	}, [])
+
+
+	const downloadCSV = () => {
+		setLoading(true);
+		const worksheet = utils.json_to_sheet(filterData);
+		const workbook = utils.book_new();
+		utils.book_append_sheet(workbook, worksheet, "Sheet1");
+		writeFileXLSX(workbook, "data.xlsx");
+		setLoading(false);
+	};
+
+  let baseColumns = []
 	if (props.disease === 'ovarian_dwi') {
 		baseColumns = [
-			{ title: '名字', dataIndex: 'name', key: 'name', fixed: 'left', width: 150},
+			{ title: '名字', dataIndex: 'name', key: 'name', fixed: 'left', width: 150, ...getColumnSearchProps('pinyin')},
 			{ title: '扫描时间', dataIndex: 'scan_date', key: 'scan_date' },
 			{ title: '年龄', dataIndex: 'age', key: 'age' },
 			{ title: '图像ID', dataIndex: 'image_id', key: 'image_id' },
@@ -156,7 +245,7 @@ const BaseTable = (props) => {
 
 								console.log('studies', studies)
 								if (studies.length) {
-									window.open(`/viewer?StudyInstanceUIDs=${studies[0].studyInstanceUid}`, '_blank')
+									window.open(`/ohif-viewer/viewer?StudyInstanceUIDs=${studies[0].studyInstanceUid}`, '_blank')
 								} else {
 									messageApi.open({
 										type: 'error',
@@ -170,10 +259,10 @@ const BaseTable = (props) => {
 									});
 							}
 						}}>查看</a>
-						<a onClick={() => {
+						{/* <a onClick={() => {
 							const folderPath = `ovarian_dwi/${record.pinyin} ${record.image_id}`
 							window.open(`/api/downloaddicom?folder_path=${encodeURIComponent(folderPath)}`, '_blank');
-						}}>下载</a>
+						}}>下载</a> */}
 					</Space>
 				)
 			},
@@ -181,7 +270,7 @@ const BaseTable = (props) => {
 	}
 	if (props.disease === 'cervical_mre') {
 		baseColumns = [
-		{title: '名字', dataIndex: 'name', key: 'name', fixed: 'left'},
+		{title: '名字', dataIndex: 'name', key: 'name', fixed: 'left', ...getColumnSearchProps('pinyin')},
 		{title: '年龄', dataIndex: 'age', key: 'age'},
 		{title: '扫描时间', dataIndex: 'scan_date', key: 'scan_date'},
 		{title: '图像ID', dataIndex: 'image_id', key: 'image_id'},
@@ -210,7 +299,7 @@ const BaseTable = (props) => {
 
 								console.log('studies', studies)
 								if (studies.length) {
-									window.open(`/viewer?StudyInstanceUIDs=${studies[0].studyInstanceUid}`, '_blank')
+									window.open(`/ohif-viewer/viewer?StudyInstanceUIDs=${studies[0].studyInstanceUid}`, '_blank')
 								} else {
 									messageApi.open({
 										type: 'error',
@@ -224,43 +313,17 @@ const BaseTable = (props) => {
 									});
 							}
 						}}>查看</a>
-				<a onClick={()=> {
+				{/* <a onClick={()=> {
 					let name = record.name.replace(' ', '_')
 					const folderPath = `cervical_mre/${name}_${record.image_id}`
 					window.open(`/api/downloaddicom?folder_path=${encodeURIComponent(folderPath)}`, '_blank');
-				}}>下载</a>
+				}}>下载</a> */}
 		  	</Space>
 		)},
 	]
 	}
-	const [data, setData] = useState([])
-	const [filterData, setFilterData] = useState([])
-	const [loading, setLoading] = useState(false);
-	const [messageApi, contextHolder] = message.useMessage();
 
-	useEffect(() => {
-		const fetchData = async () => {
-			const response = await fetch(`/api/patients?table=${props.disease}`)
-			const { data } = await response.json()
-			setData(data.map((item, index) => ({
-				...item,
-				key: index.toString() // 添加唯一的key
-			})))
-		}
-		fetchData()
-	}, [])
-
-
-	const downloadCSV = () => {
-		setLoading(true);
-		const worksheet = utils.json_to_sheet(filterData);
-		const workbook = utils.book_new();
-		utils.book_append_sheet(workbook, worksheet, "Sheet1");
-		writeFileXLSX(workbook, "data.xlsx");
-		setLoading(false);
-	};
-
-	var _a;
+	let _a;
 	const [dragIndex, setDragIndex] = useState<DragIndexState>({ active: -1, over: -1 });
 	const [columns, setColumns] = useState(() =>
 		baseColumns.map((column, i) =>
