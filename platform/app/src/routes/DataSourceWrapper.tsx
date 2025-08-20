@@ -152,7 +152,6 @@ function DataSourceWrapper(props: withAppTypes) {
       setIsLoading(true);
       log.time(Enums.TimingEnum.SEARCH_TO_LIST);
       const studies = await dataSource.query.studies.search(queryFilterValues);
-
       setData({
         studies: studies || [],
         total: studies.length,

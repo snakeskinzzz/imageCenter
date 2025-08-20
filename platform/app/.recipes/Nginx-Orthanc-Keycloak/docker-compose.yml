@@ -42,6 +42,9 @@ services:
     image: jodogne/orthanc-plugins
     hostname: orthanc
     container_name: orthanc
+    ports:
+      - '8042:8042'
+      - '4242:4242'
     volumes:
       - ./config/orthanc.json:/etc/orthanc/orthanc.json:ro
       - ~/Desktop/orthanc-db/:/var/lib/orthanc/db/

@@ -152,6 +152,9 @@ export default defineConfig({
         target: 'http://localhost:8081',
         changeOrigin: true
       },
+      '/dicom-web': {
+        target: 'http://localhost:8042'
+      },
       // Add conditional proxy based on env vars
       ...(PROXY_TARGET && PROXY_DOMAIN
         ? {
