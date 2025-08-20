@@ -243,7 +243,6 @@ const BaseTable = (props) => {
 									sortDirection: 'ascending'
 								})
 
-								console.log('studies', studies)
 								if (studies.length) {
 									window.open(`/ohif-viewer/viewer?StudyInstanceUIDs=${studies[0].studyInstanceUid}`, '_blank')
 								} else {
@@ -297,7 +296,6 @@ const BaseTable = (props) => {
 									sortDirection: 'ascending'
 								})
 
-								console.log('studies', studies)
 								if (studies.length) {
 									window.open(`/ohif-viewer/viewer?StudyInstanceUIDs=${studies[0].studyInstanceUid}`, '_blank')
 								} else {

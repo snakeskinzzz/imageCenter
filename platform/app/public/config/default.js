@@ -215,9 +215,9 @@ window.config = {
       configuration: {
         friendlyName: 'local Orthanc DICOMWeb Server',
         name: 'DCM4CHEE',
-        wadoUriRoot: 'http://localhost/pacs/dicom-web',
-        qidoRoot: 'http://localhost/pacs/dicom-web',
-        wadoRoot: 'http://localhost/pacs/dicom-web',
+        wadoUriRoot: 'http://localhost:3000/dicom-web',
+        qidoRoot: 'http://localhost:3000/dicom-web',
+        wadoRoot: 'http://localhost:3000/dicom-web',
         qidoSupportsIncludeField: true,
         supportsReject: true,
         dicomUploadEnabled: true,
